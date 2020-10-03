@@ -1,0 +1,47 @@
+POST http://localhost:3001/users
+Content-Type: application/json
+
+{
+    "userName": "Eemeli123",
+    "password": "Eemeli321",
+    "birthDate": "17-06-1996", 
+    "address": {
+        "street": "Hanhitie 17",
+        "country": "FI",
+        "postalCode": "90150",
+        "city": "Oulu"
+    },
+    "email": "eemeli123@gmail.com",
+    "phoneNumber": "123123123"
+}
+###
+POST http://localhost:3001/login
+Content-Type: application/json
+
+{
+    "userName": "Eemeli123",
+    "password": "Eemeli321"
+}
+
+###
+POST http://localhost:3001/itemListings
+Content-Type:  application/json
+
+ {
+    "description": "Tälläne esine ois myynnis",
+    "itemName": "Kitara",
+    "dateOfListing": "3/10/2020", // ISO 8601
+    "location": {
+        "country": "FI",
+        "state": "Oulu",
+        "city": "Oulu"
+    },
+    "price": "30",
+    "categories": [],
+    "deliveryType": "Nouto",
+    "sellersName": "Kalle",
+    "sellersContactInfo": {
+        "phoneNumber": "123123123",
+        "email": "kalle@gmail.com"
+    }
+}
