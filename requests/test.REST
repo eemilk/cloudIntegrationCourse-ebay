@@ -15,6 +15,13 @@ Content-Type: application/json
     "phoneNumber": "123123123"
 }
 ###
+DELETE http://localhost:3001/users
+Content-Type: application/json
+
+{
+    "id": "b4a7dedd-1e9f-4a82-bf3b-8e1663a618a0"
+}
+###
 POST http://localhost:3001/login
 Content-Type: application/json
 
@@ -29,8 +36,8 @@ Content-Type:  application/json
 
  {
     "description": "Tälläne esine ois myynnis",
-    "itemName": "Kitara",
-    "dateOfListing": "3/10/2020", // ISO 8601
+    "itemName": "Kitara2",
+    "dateOfListing": "3/10/2020", 
     "location": {
         "country": "FI",
         "state": "Oulu",
@@ -38,10 +45,18 @@ Content-Type:  application/json
     },
     "price": "30",
     "categories": [],
-    "deliveryType": "Nouto",
+    "deliveryType": "Nouto", 
     "sellersName": "Kalle",
     "sellersContactInfo": {
         "phoneNumber": "123123123",
         "email": "kalle@gmail.com"
     }
+}
+
+###
+GET http://localhost:3001/itemListings/search
+Content-Type: application/json
+
+{
+    "search": "Kitara2"
 }
