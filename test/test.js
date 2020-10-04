@@ -4,16 +4,16 @@ chai.use(chaiHttp);
 const server = require('../index');
 
 const expect = chai.expect;
-const apiAddress = 'http://localhost:3001';
+const apiAddress = 'http://localhost:3000';
 
-
+//User creation tests
 describe('User creation', function() {
 
     it('Should create a user', async function() {
         await chai.request(apiAddress)
         .post('/users')
         .send({
-            userName: 'userName',
+            userName: 'userName1',
             name: 'Pekka',
             address: {
                 streetAddress: 'streetAddress',
@@ -50,7 +50,7 @@ describe('User creation', function() {
                 password: 'password'
             })
             .then(response => {
-                expect(response.status).to.equal(500)
+                expect(response.status).to.equal(400)
             })
             .catch(error => {
                 throw error
@@ -74,7 +74,7 @@ describe('User creation', function() {
             
             })
             .then(response => {
-                expect(response.status).to.equal(500)
+                expect(response.status).to.equal(400)
             })
             .catch(error => {
                 throw error
@@ -98,19 +98,20 @@ describe('User creation', function() {
             
             })
             .then(response => {
-                expect(response.status).to.equal(500)
+                expect(response.status).to.equal(400)
             })
             .catch(error => {
                 throw error
             })
     })
 
+//Login tests 
 describe('Login', function (){
     it('should login successfully', async function() {
         await chai.request(apiAddress)
         .get('/login')
         .send({
-            username: 'username',
+            username: 'userName',
             password: 'password'
         })
         .then(response => {
@@ -163,7 +164,7 @@ describe('Login', function (){
         })
         .then(response => {
             expect(response).to.have.property('status')
-            expect(response.status).to.equal(401)
+            expect(response.status).to.equal(400)
         })
         .catch(error => {
             throw error
@@ -178,7 +179,7 @@ describe('Login', function (){
         })
         .then(response => {
             expect(response).to.have.property('status')
-            expect(response.status).to.equal(401)
+            expect(response.status).to.equal(400)
         })
         .catch(error => {
             throw error
@@ -186,7 +187,8 @@ describe('Login', function (){
     })
 
 })
-
+ 
+//User delete tests
 describe('delete user', function() {
     it('should delete user', async function() {
         await chai.request(apiAddress)
@@ -203,7 +205,7 @@ describe('delete user', function() {
             })
             .then(newLoginResponse => {
                 expect(newLoginResponse).to.have.property('status')
-                expect(newLoginResponse.status).to.equal(401)
+                expect(newLoginResponse.status).to.equal(400)
             })
             .catch(error => {
                 throw error

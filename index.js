@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken')
 const { v4: uuidv4 } = require('uuid')
 
 
-const PORT = 3001
+const PORT = 3000
 
 app.use(bodyParser.json())
 //app.use(bodyParser.urlencoded({ extended: true }))
@@ -22,6 +22,7 @@ app.listen(PORT, () => {
 var users = []
 
 var postings = []
+
 
 /* ROUTES */
 
