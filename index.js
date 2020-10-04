@@ -6,6 +6,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { v4: uuidv4 } = require('uuid')
 
 
 const PORT = 3001
@@ -50,8 +51,21 @@ app.post('/users', (req, res) => {
     try {
         console.log(req.body)
         var UserInfo = req.body
-        users.push(UserInfo)
-        res.status(200).send()
+        if (UserInfo.password == null || UserInfo.userName == null || UserInfo.email == null) {
+            res.status(400).send("Please provide all the needed info")
+        } else {
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].userName == UserInfo.userName) {
+                    res.status(400).send("That username already exist")
+                }
+                if (users[i].email == UserInfo.email) {
+                    res.status(400).send("That email already exist")
+                }
+            }
+            UserInfo.id = uuidv4()
+            users.push(UserInfo)
+            res.status(200).send(UserInfo.id)            
+        }
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -59,15 +73,22 @@ app.post('/users', (req, res) => {
 })
 
 // Delete user
-app.delete('/users/{id}', (req, res) => {
+app.delete('/users', (req, res) => {
     try {
         console.log(req.body)
+        var userFound = false;
         var UserInfo = req.body
-        for (let i = 0; i < 0; i++) {
+        for (let i = 0; i < users.length; i++) {
             if (users[i].id == UserInfo.id) {
-                users[i].remove()
+                users.splice(i, 1)
+                userFound = true;
                 break
             }
+        }
+        if (userFound) {
+            res.status(200).send("User deleted")
+        } else {
+            res.status(400).send("User could not be deleted")
         }
     } catch (err) {
         console.log(err)
@@ -80,7 +101,9 @@ app.post('/itemListings', (req, res) => {
     try {
         console.log(req.body)
         var ItemInfo = req.body
-        items.push(ItemInfo)
+        ItemInfo.id = uuidv4()
+        postings.push(ItemInfo)
+        res.status(200).send("Item created")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -88,7 +111,7 @@ app.post('/itemListings', (req, res) => {
 })
 
 // Update item listing
-app.put('/itemListings/{id}', (req, res) => {
+app.put('/itemListings', (req, res) => {
     try {
         console.log(req.body)
         var ItemInfo = req.body
@@ -98,6 +121,7 @@ app.put('/itemListings/{id}', (req, res) => {
                 break
             }
         }
+        res.status(400).send("Item you are trying to update cannot be found")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -105,7 +129,7 @@ app.put('/itemListings/{id}', (req, res) => {
 })
 
 // Delete item listing
-app.delete('/itemListings/{id}', (req, res) => {
+app.delete('/itemListings', (req, res) => {
     try {
         console.log(req.body)
         var ItemInfo = req.body
@@ -125,6 +149,47 @@ app.delete('/itemListings/{id}', (req, res) => {
 app.get('/itemListings/search', (req, res) => {
     try {
         console.log(req.body)
+        var itemIsfound = false
+        var foundList = []
+        var search = req.body.search
+        for (let j = 0; j < postings.length; j++) {
+            console.log(postings[j])
+            itemIsfound = false;
+            // Checks for name of that item
+            if (search == postings[j].itemName) {
+                itemIsfound = true
+                foundList.push(postings[j])
+            }
+            // Checks for categories of that item if its not found already
+            if (!itemIsfound) {
+                for (let i = 0; i < postings[j].categories.length; i++) {
+                    if (search == postings[j].categories[i]) {
+                        itemIsfound = true
+                        foundList.push(postings[j])
+                    }
+                }
+            }
+            // Checks of location of that item does it match
+            if (!itemIsfound) {
+                if (search == postings[j].location.country 
+                    || search == postings[j].location.state || search == postings[j].location.city) {
+                        itemIsfound = true
+                        foundList.push(postings[j])
+                    }
+            }
+            // Checks for seached date of that item does it match
+            if (!itemIsfound) {
+                if (search == postings[j].dateOfListing.slice(0, 10)) {
+                    itemIsfound = true
+                    foundList.push(postings[j])
+                }   
+            }
+        }
+        if (itemIsfound) {
+            res.status(200).send(foundList)
+        } else {
+            res.status(404).send("No items found")
+        }
     } catch (err) {
         console.log(err)
         res.status(500).send()
