@@ -6,6 +6,7 @@ const server = require('../index');
 const expect = chai.expect;
 const apiAddress = 'http://localhost:3000';
 
+
 //User creation tests
 describe('User creation', function() {
 
@@ -109,11 +110,8 @@ describe('User creation', function() {
 describe('Login', function (){
     it('should login successfully', async function() {
         await chai.request(apiAddress)
-        .get('/login')
-        .send({
-            username: 'userName',
-            password: 'password'
-        })
+        .post('/login')
+        .send({userName:'testi',password: 'testi'})
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(200)
@@ -125,11 +123,8 @@ describe('Login', function (){
 
     it('should not login with incorrect username', async function() {
         await chai.request(apiAddress)
-        .get('/login')
-        .send({
-            username: 'WrongUsername',
-            password: 'password'
-        })
+        .post('/login')
+        .auth('WronguserName','testi')
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(401)
@@ -141,11 +136,8 @@ describe('Login', function (){
 
     it('should not login with incorrect password', async function() {
         await chai.request(apiAddress)
-        .get('/login')
-        .send({
-            username: 'username',
-            password: 'Wrongpassword'
-        })
+        .post('/login')
+        .auth('testi','wrongpassword')
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(401)
@@ -157,11 +149,8 @@ describe('Login', function (){
 
     it('should not login with missing username', async function() {
         await chai.request(apiAddress)
-        .get('/login')
-        .send({
-            
-            password: 'password'
-        })
+        .post('/login')
+        .auth(null,'password')
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(400)
@@ -173,10 +162,8 @@ describe('Login', function (){
 
     it('should not login with missing password', async function() {
         await chai.request(apiAddress)
-        .get('/login')
-        .send({
-            username: 'username'
-        })
+        .post('/login')
+        .auth('userName',null)
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(400)
@@ -213,4 +200,25 @@ describe('delete user', function() {
     })
 })
     
+})
+
+//Create item listing
+describe('Item listing creation', function() {
+
+    it('Should create a item listing', async function() {
+        await chai.request(apiAddress)
+        .post('/itemListings')
+        .send({
+            title: 'Peruna',
+            description: 'Hieno peruna',
+            price: 0.55,
+            deliveryType: 'pickup'
+        })
+        .then(response => {
+            expect(response.status).to.equal(200)
+        })
+        .catch(error =>{
+            assert.fail(error)
+        })
+    })
 })
