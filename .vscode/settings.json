@@ -3,6 +3,5 @@
         "node_modules{,/**}",
         ".vscode{,/**}"
     ],
-    "appService.defaultWebAppToDeploy": "/subscriptions/816b4816-ee8f-44de-bb4a-1adc0912f0b1/resourceGroups/cloudint-ebay_group/providers/Microsoft.Web/sites/ebay-clone",
     "appService.deploySubpath": "."
 }
