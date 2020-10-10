@@ -118,7 +118,7 @@ app.put('/itemListings', (req, res) => {
         for (let i = 0; i < postings.length; i++) {
             if (postings[i].id == ItemInfo.id) {
                 postings[i] == ItemInfo
-                break
+                res.status(200).send("Item is updated")
             }
         }
         res.status(400).send("Item you are trying to update cannot be found")
