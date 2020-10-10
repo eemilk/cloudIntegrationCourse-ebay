@@ -19,28 +19,45 @@ app.listen(PORT, () => {
     console.log(`Server is running in ${PORT}`)
 })
 
-var users = []
+var users = [
+    {
+        username: 'testi',
+        email: 'testi@example.com',
+        password: 'testi', 
+        id: 1234
+    }
+]
 
-var postings = []
+var postings = [ 
+    {
+        id: 1234,
+        title: 'Peruna',
+        description: 'Tosi Tosi Hieno peruna',
+        price: 0.65,
+        deliveryType: 'pickup'
+    }
+]
 
 
 /* ROUTES */
 
 // Login
-app.post('/login', (req, res) => {
+app.get('/login', (req, res) => {
     try {
-        console.log(req.body)
+        //console.log(req.body)
         console.log(users)
         var UserInfo = req.body
-        if (UserInfo.userName == null || UserInfo.password == null) {
-            res.status(400).send("No username or password")
-        }
+        
         for (let i = 0; i < users.length; i++) {
             if (UserInfo.password == users[i].password && UserInfo.userName == users[i].userName) {
-                res.status(200).send("Login success")
+                res.status(200)
+                res.json({id: users[i].id})
             }
         }
-        res.status(401).send("Wrong password or username")
+        if (UserInfo.userName == null || UserInfo.password == null) {
+            res.status(404).send("No username or password")
+        }
+        res.status(404).send("Wrong password or username")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -50,7 +67,7 @@ app.post('/login', (req, res) => {
 // Create user
 app.post('/users', (req, res) => {
     try {
-        console.log(req.body)
+        //console.log(req.body)
         var UserInfo = req.body
         if (UserInfo.password == null || UserInfo.userName == null || UserInfo.email == null) {
             res.status(400).send("Please provide all the needed info")
@@ -74,7 +91,7 @@ app.post('/users', (req, res) => {
 })
 
 // Delete user
-app.delete('/users', (req, res) => {
+app.delete('/users/:id', (req, res) => {
     try {
         console.log(req.body)
         var userFound = false;
@@ -89,7 +106,7 @@ app.delete('/users', (req, res) => {
         if (userFound) {
             res.status(200).send("User deleted")
         } else {
-            res.status(400).send("User could not be deleted")
+            res.status(404).send("User could not be deleted")
         }
     } catch (err) {
         console.log(err)
@@ -104,25 +121,34 @@ app.post('/itemListings', (req, res) => {
         var ItemInfo = req.body
         ItemInfo.id = uuidv4()
         postings.push(ItemInfo)
-        res.status(200).send("Item created")
+        res.status(200)
+        res.json({id: postings[postings.length - 1].id})
+        
     } catch (err) {
         console.log(err)
         res.status(500).send()
     }
 })
 
+app.get('/itemListings', (req, res) => {
+    res.status(200)
+    res.json({postings})
+
+})
+
 // Update item listing
-app.put('/itemListings', (req, res) => {
+app.put('/itemListings/:id', (req, res) => {
     try {
-        console.log(req.body)
+        console.log(req.params.id)
+        var id = req.params.id
         var ItemInfo = req.body
         for (let i = 0; i < postings.length; i++) {
-            if (postings[i].id == ItemInfo.id) {
+            if (postings[i].id == id) {
                 postings[i] == ItemInfo
-                break
+                res.status(200).send()
             }
         }
-        res.status(400).send("Item you are trying to update cannot be found")
+        res.status(404).send("Item you are trying to update cannot be found")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -130,16 +156,18 @@ app.put('/itemListings', (req, res) => {
 })
 
 // Delete item listing
-app.delete('/itemListings', (req, res) => {
+app.delete('/itemListings/:id', (req, res) => {
     try {
         console.log(req.body)
+        var id = req.params.id
         var ItemInfo = req.body
         for (let i = 0; i < postings.length; i++) {
-            if (postings[i].id == ItemInfo.id) {
-                items[i].remove()
-                break
+            if (postings[i].id == id) {
+                postings.splice(i, 1)
+                res.status(200).send()
             }
         }
+        res.status(404).send("Item you are trying to update cannot be found")
     } catch (err) {
         console.log(err)
         res.status(500).send()
