@@ -31,5 +31,5 @@ jobs:
       with:
         app-name: 'ebay-clone'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_12eea23895d8482ead027dae25abf67f }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_2dd2d3c5b3f4437582167c3bb03efc8a }}
         package: .
