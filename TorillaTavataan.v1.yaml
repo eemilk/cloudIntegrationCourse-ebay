@@ -1,0 +1,365 @@
+openapi: 3.0.0
+info:
+  title: TorillaTavataan
+  version: '1.0'
+  description: TorillaTavataan online marketplace for used items
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /login:
+    post:
+      summary: Login
+      operationId: post-login
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+      description: Login with username and password
+  /users:
+    post:
+      summary: Create a user
+      operationId: post-users
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userID:
+                    type: integer
+        '400':
+          description: Bad Request
+      description: create a user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                name:
+                  type: string
+                address:
+                  type: object
+                  properties:
+                    streetAddress:
+                      type: string
+                    country:
+                      type: string
+                      description: ISO 8601
+                    PostalCode:
+                      type: string
+                    city:
+                      type: string
+                email:
+                  type: string
+                birthDate:
+                  type: string
+                password:
+                  type: string
+  '/users/{userId}':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    put:
+      summary: Modify a user
+      operationId: put-users-userId
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      description: Modify a user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+        - JSONWebToken: []
+    delete:
+      summary: Delete a user
+      operationId: delete-users-userId
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      description: Delete a specific user
+      security:
+        - JSONWebToken: []
+  /postings:
+    get:
+      summary: Get all postings
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Posting'
+      operationId: get-postings
+      description: Get information of all postings
+    post:
+      summary: Create a posting
+      operationId: post-postings
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postingID:
+                    type: integer
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+      description: Create a posting
+      security:
+        - JSONWebToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Posting'
+  '/postings/{postingID}':
+    parameters:
+      - schema:
+          type: string
+        name: postingID
+        in: path
+        required: true
+    get:
+      summary: Get information of a specific posting
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Posting'
+        '404':
+          description: Not Found
+      operationId: get-postings-postingID
+      description: Get information of a specific posting
+    put:
+      summary: Modify a specific posting
+      operationId: put-postings-postingID
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      description: Modify a specific posting
+      security:
+        - JSONWebToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Posting'
+    delete:
+      summary: Delete a specific posting
+      operationId: delete-postings-postingID
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      description: Delete a specific posting
+      security:
+        - JSONWebToken: []
+  /postings/search:
+    get:
+      summary: Search  postings
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Posting'
+      operationId: get-postings-search
+      description: 'Search postings based on location, date of posting or category'
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: category
+        - schema:
+            type: string
+          in: query
+          name: location
+        - schema:
+            type: string
+          in: query
+          name: dateOfPosting
+components:
+  schemas:
+    User:
+      title: User
+      type: object
+      description: Information of registered user
+      x-examples:
+        example-1:
+          id: 234343
+          username: Queko
+          name: Eemil
+          address:
+            street: Eemilinkuja 34
+            country: FI
+            postalCode: '90100'
+            city: Oulu
+          email: eemil@eemil.com
+          birthDate: '1996-06-17'
+      properties:
+        userID:
+          type: integer
+        username:
+          type: string
+        name:
+          type: string
+        address:
+          type: object
+          required:
+            - street
+            - country
+            - postalCode
+            - city
+          properties:
+            street:
+              type: string
+            country:
+              type: string
+              description: ISO 3166
+            postalCode:
+              type: string
+            city:
+              type: string
+        email:
+          type: string
+        birthDate:
+          type: string
+          description: ISO 8601
+      required:
+        - userID
+        - username
+        - name
+        - address
+        - email
+        - birthDate
+    Posting:
+      title: Posting
+      type: object
+      description: Desciption of a listed posting
+      x-examples:
+        example-1:
+          id: 3523545
+          title: Pesukone
+          categories:
+            - kodinkoneet
+          location:
+            city: Porvoo
+            state: Uusimaa
+            country: FI
+          dateOfPosting: '2020-07-20'
+          deliveryType: Pick up
+          seller:
+            name: Johannes
+            contactInfo:
+              email: Johannes@Johannes.com
+              phoneNumber: 050-3235435
+          askingPrice: 350.5
+          images:
+            - {}
+          description: Hyvä ja toimiva pesukone
+      properties:
+        postingID:
+          type: integer
+        title:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
+          required:
+            - city
+            - state
+            - country
+          properties:
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+        dateOfPosting:
+          type: string
+          description: ISO 8601
+        deliveryType:
+          type: string
+        seller:
+          type: object
+          properties:
+            name:
+              type: string
+            contactInfo:
+              type: object
+              properties:
+                email:
+                  type: string
+                phoneNumber:
+                  type: string
+        askingPrice:
+          type: number
+        images:
+          type: array
+          items:
+            type: object
+        description:
+          type: string
+      required:
+        - postingID
+        - title
+        - categories
+        - location
+        - dateOfPosting
+        - deliveryType
+        - seller
+        - askingPrice
+        - images
+        - description
+  securitySchemes:
+    HTTPbasic:
+      type: http
+      scheme: basic
+    JSONWebToken:
+      type: http
+      scheme: bearer
