@@ -3,15 +3,19 @@ const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 const server = require('../index');
 
-const expect = chai.expect;
+
+const expect = require('chai').expect;
+const assert = require('chai').assert;
 const apiAddress = 'http://localhost:3000';
+
+
 
 
 //User creation tests
 describe('User creation', function() {
 
     it('Should create a user', async function() {
-        await chai.request(apiAddress)
+        await  chai.request(apiAddress)
         .post('/users')
         .send({
             userName: 'userName1',
@@ -30,8 +34,9 @@ describe('User creation', function() {
             expect(response.status).to.equal(200)
         })
         .catch(error =>{
-            assert.fail(error)
+            expect.fail(error)
         })
+        
     })
     
 
@@ -112,11 +117,11 @@ describe('Login', function (){
     it('should login successfully', async function() {
         await chai.request(apiAddress)
         .get('/login')
-        .send({username: 'testi', password: 'testi'})
+        .auth('testi', 'testi')
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(200)
-            expect(response.body).to.have.property('id')
+            expect(response.body).to.have.property('jwt');
         })
         .catch(error => {
             throw error
@@ -179,18 +184,21 @@ describe('Login', function (){
  
 //User delete tests
 describe('delete user', function() {
-    let userId = null
     
+    let userJwt = null;
+    let decodedJwt = null;
     
     before(async function(){
         await chai.request(apiAddress)
         .get('/login')
-        .send({username: 'testi', password: 'testi'})
+        .auth('testi', 'testi')
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(200)
-            expect(response.body).to.have.property('id')
-            userId = response.body.id
+            expect(response.body).to.have.property('jwt');
+            
+            userJwt = response.body.jwt;
+            decodedJwt = jsonwebtoken.decode(userJwt, { complete: true })
         })
     })
     
@@ -198,21 +206,41 @@ describe('delete user', function() {
     
     it('should delete user', async function() {
         await chai.request(apiAddress)
-            .delete('/users/' + userId)
-            .send({id: userId}) 
+            .delete('/users/' + decodedJwt.payload.user.id)
+            .set('Authorization', 'Bearer ' + userJwt)
             .then(deleteResponse => {
                 expect(deleteResponse).to.have.property('status')
                 expect(deleteResponse.status).to.equal(200)
                 return chai.request(apiAddress)
                     .get('/login')
-                    .send({
-                        username: 'testi',
-                        password: 'testi'
-                    })
+                    .auth('testi', 'testi')
+                    
             })
             .then(newLoginResponse => {
                 expect(newLoginResponse).to.have.property('status')
-                expect(newLoginResponse.status).to.equal(404)
+                expect(newLoginResponse.status).to.equal(401)
+
+                return chai.request(apiAddress)
+                .post('/users')
+                .send({
+                userName: 'testi',
+                name: 'testi',
+                address: {
+                    streetAddress: 'streetAddress',
+                    country: 'FI',
+                    postalCode: '12300',
+                    city: 'Oulu'
+                },
+                email: 'pekka@pekka.com',
+                birthDate: '2015-06-06',
+                password: 'password'
+        })
+        .then(response => {
+            expect(response.status).to.equal(200)
+        })
+        .catch(error =>{
+            assert.fail(error)
+        })
             })
             .catch(error => {
                 throw error
@@ -225,11 +253,27 @@ describe('delete user', function() {
 
 //Create item listing
 describe('Item listing creation', function() {
+    let userJwt = null;
+    let decodedJwt = null;
     
-    
+    before(async function(){
+        await chai.request(apiAddress)
+        .get('/login')
+        .auth('testi', 'testi')
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(200)
+            expect(response.body).to.have.property('jwt');
+            
+            userJwt = response.body.jwt;
+            decodedJwt = jsonwebtoken.decode(userJwt, { complete: true })
+        })
+    })
+
     it('Should create a item listing', async function() {
         await chai.request(apiAddress)
         .post('/itemListings')
+        .set('Authorization', 'Bearer ' + userJwt)
         .send({
             title: 'Peruna',
             description: 'Hieno peruna',
@@ -262,7 +306,7 @@ describe('get information of item listings',  function() {
             itemId = response.body.postings
         })
         .catch(error => {
-            expect.fail(error)
+            assert.fail(error)
         })
     })
 
@@ -271,26 +315,30 @@ describe('get information of item listings',  function() {
 
 // Modify item listings
 describe('Modfify item listings', function() {
-    let userId = null
-    let itemId = null
+    
+    
+    let userJwt = null;
+    let decodedJwt = null;
     
     before(async function(){
         await chai.request(apiAddress)
-        .get('/itemListings')
+        .get('/login')
+        .auth('testi', 'testi')
         .then(response => {
+            expect(response).to.have.property('status')
             expect(response.status).to.equal(200)
-            expect(response.body).to.be.a('object')
-            expect(response.body).to.have.property('postings')
-            expect(response.body.postings).to.be.a('array')
-            itemId = response.body.postings.id
+            expect(response.body).to.have.property('jwt');
+            
+            userJwt = response.body.jwt;
+            decodedJwt = jsonwebtoken.decode(userJwt, { complete: true })
         })
-        
     })
     
 
     it('Should update item listings successfully',async function(){
         await chai.request(apiAddress)
         .put('/itemlistings/' + 1234)
+        .set('Authorization', 'Bearer ' + userJwt)
         .send({
             title: 'Peruna',
             description: 'Tosi Hieno peruna',
@@ -302,7 +350,7 @@ describe('Modfify item listings', function() {
             expect(response.status).to.equal(200)
         })
         .catch(error => {
-            expect.fail(error)
+            assert.fail(error)
         })
 
     })
@@ -310,6 +358,7 @@ describe('Modfify item listings', function() {
     it('Should fail if item listings cannot be found',async function(){
         await chai.request(apiAddress)
         .put('/itemlistings/' + 23454345)
+        .set('Authorization', 'Bearer ' + userJwt)
         .send({
             title: 'Peruna',
             description: 'Tosi Hieno peruna',
@@ -318,38 +367,155 @@ describe('Modfify item listings', function() {
         })
         .then(response => {
             expect(response).to.have.property('status')
-            expect(response.status).to.equal(404)
+            expect(response.status).to.equal(401)
         })
         .catch(error => {
-            expect.fail(error)
+            assert.fail(error)
         })
     })
 
     it('Should delete item listing',async function(){
         await chai.request(apiAddress)
         .delete('/itemlistings/' + 1234)
+        .set('Authorization', 'Bearer ' + userJwt)
         .then(response => {
             expect(response).to.have.property('status')
             expect(response.status).to.equal(200)
         })
         .catch(error => {
-            expect.fail(error)
+            assert.fail(error)
         })
     })
 
     it('Should fail if item listings cannot be found',async function(){
         await chai.request(apiAddress)
         .delete('/itemlistings/' + 23454345)
+        .set('Authorization', 'Bearer ' + userJwt)
         .then(response => {
             expect(response).to.have.property('status')
-            expect(response.status).to.equal(404)
+            expect(response.status).to.equal(401)
         })
         .catch(error => {
-            expect.fail(error)
+            assert.fail(error)
         })
     })
 
 
 
+})
+
+// search for items
+describe('Search for items',  function(){
+    
+    let userJwt = null;
+    let decodedJwt = null;
+    
+    before(async function(){
+        await chai.request(apiAddress)
+        .get('/login')
+        .auth('testi', 'testi')
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(200)
+            expect(response.body).to.have.property('jwt');
+            
+            userJwt = response.body.jwt;
+            decodedJwt = jsonwebtoken.decode(userJwt, { complete: true })
+        })
+    })
+    
+    
+    it('Should search for items based on category', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ category: 'kodinkoneet'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(200)
+            expect(response.body).to.be.a('object')
+            expect(response.body).to.have.property('foundList')
+            expect(response.body.postings).to.be.a('array')
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+
+    it('should fail if category not found', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ category: 'kodinkoneet'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(404)
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+    it('Should search for items based on location', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ location: 'FI'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(200)
+            expect(response.body).to.be.a('object')
+            expect(response.body).to.have.property('foundList')
+            expect(response.body.postings).to.be.a('array')
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+
+    it('should fail if no items in given location found', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ location: 'USA'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(404)
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+
+    it('Should search for items based on date', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ date: '2020-08-06'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(200)
+            expect(response.body).to.be.a('object')
+            expect(response.body).to.have.property('foundList')
+            expect(response.body.postings).to.be.a('array')
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+    it('should fail if no items in given date found', async function(){
+        await chai.request(apiAddress)
+        .get('/itemListings/search')
+        .set('Authorization', 'Bearer ' + userJwt)
+        .send({ date: '2020-08-07'})
+        .then(response => {
+            expect(response).to.have.property('status')
+            expect(response.status).to.equal(404)
+        })
+        .catch(error => {
+            assert.fail(error)
+        })
+    })
+    
+    
 })
 
