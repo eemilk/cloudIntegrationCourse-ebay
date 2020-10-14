@@ -7,7 +7,11 @@ const bodyParser = require('body-parser')
 //const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { v4: uuidv4 } = require('uuid')
-
+const passport = require('passport');
+const BasicStrategy = require('passport-http').BasicStrategy;
+const JwtStrategy = require('passport-jwt').Strategy,
+      ExtractJwt = require('passport-jwt').ExtractJwt
+const jwtSecretKey = require('./jwt-key.json')
 
 const PORT = process.env.PORT || 3001
 
@@ -19,28 +23,94 @@ app.listen(PORT, () => {
     console.log(`Server is running in ${PORT}`)
 })
 
-var users = []
+/*passport.use(new BasicStrategy(async function(username, password, done) {
+    
+    const user = users.find(u => u.username == username)
+    if(user == undefined){
+        return done(null, false, { message: "HTTP Basic username not found" })
+    }
+    if(bcrypt.compareSync(password, user.password) == false) {
+        // Password does not match
+        console.log("HTTP Basic password not matching username");
+        return done(null, false, { message: "HTTP Basic password not found" });
+      }
+    return done(null, user);
 
-var postings = []
+
+}))*/
+
+
+let options = {}
+
+options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken()
+options.secretOrKey = jwtSecretKey.secret
+
+passport.use(new JwtStrategy(options, function(jwt_payload, done){
+    console.log(jwt_payload)
+
+    const now = Date.now() / 1000;
+    if(jwt_payload.exp > now) {
+    done(null, jwt_payload.user);
+    }
+    else {// expired
+        done(null, false);
+    }
+}));
+
+
+var users = [
+    {
+        username: 'testi',
+        email: 'testi@example.com',
+        password: 'testi', 
+        id: 1234
+    }
+]
+
+var postings = [ 
+    {
+        id: 1234,
+        title: 'Peruna',
+        description: 'Tosi Tosi Hieno peruna',
+        price: 0.65,
+        deliveryType: 'pickup'
+    }
+]
 
 
 /* ROUTES */
 app.get('/', () => {res.send("Hello there")})
 
 
-// Login
-app.post('/login', (req, res) => {
+// Login passport.authenticate('basic', {session:false}),
+app.get('/login',  (req, res) => {
     try {
-        console.log(req.body)
-        console.log(users)
+        
         var UserInfo = req.body
-        if (UserInfo.userName == null || UserInfo.password == null) {
-            res.status(400).send("No username or password")
+
+        const body = {
+            id: UserInfo.id
         }
+
+        const payload = {
+            user: body
+        }
+
+        const options = {
+            expiresIn: '1d'
+        }
+        const token = jwt.sign(payload, jwtSecretKey.secret, options)
+        
+        
         for (let i = 0; i < users.length; i++) {
             if (UserInfo.password == users[i].password && UserInfo.userName == users[i].userName) {
-                res.status(200).send("Login success")
+                
+                res.status(200).json({jwt: token})
+                break
             }
+        }
+        if (UserInfo.userName == null || UserInfo.password == null) {
+            res.status(404).send("No username or password")
         }
         res.status(401).send("Wrong password or username")
     } catch (err) {
@@ -52,7 +122,7 @@ app.post('/login', (req, res) => {
 // Create user
 app.post('/users', (req, res) => {
     try {
-        console.log(req.body)
+        //console.log(req.body)
         var UserInfo = req.body
         if (UserInfo.password == null || UserInfo.userName == null || UserInfo.email == null) {
             res.status(400).send("Please provide all the needed info")
@@ -76,7 +146,7 @@ app.post('/users', (req, res) => {
 })
 
 // Delete user
-app.delete('/users', (req, res) => {
+app.delete('/users/:id',passport.authenticate('jwt', {session:false}), (req, res) => {
     try {
         console.log(req.body)
         var userFound = false;
@@ -91,7 +161,7 @@ app.delete('/users', (req, res) => {
         if (userFound) {
             res.status(200).send("User deleted")
         } else {
-            res.status(400).send("User could not be deleted")
+            res.status(401).send("User could not be deleted")
         }
     } catch (err) {
         console.log(err)
@@ -100,31 +170,40 @@ app.delete('/users', (req, res) => {
 })
 
 // Create item listing
-app.post('/itemListings', (req, res) => {
+app.post('/itemListings',passport.authenticate('jwt', {session:false}), (req, res) => {
     try {
         console.log(req.body)
         var ItemInfo = req.body
         ItemInfo.id = uuidv4()
         postings.push(ItemInfo)
-        res.status(200).send("Item created")
+        res.status(200)
+        res.json({id: postings[postings.length - 1].id})
+        
     } catch (err) {
         console.log(err)
         res.status(500).send()
     }
 })
 
+app.get('/itemListings', (req, res) => {
+    res.status(200)
+    res.json({postings})
+
+})
+
 // Update item listing
-app.put('/itemListings', (req, res) => {
+app.put('/itemListings/:id',passport.authenticate('jwt', {session:false}), (req, res) => {
     try {
-        console.log(req.body)
+        console.log(req.params.id)
+        var id = req.params.id
         var ItemInfo = req.body
         for (let i = 0; i < postings.length; i++) {
-            if (postings[i].id == ItemInfo.id) {
+            if (postings[i].id == id) {
                 postings[i] == ItemInfo
-                res.status(200).send("Item is updated")
+                res.status(200).send()
             }
         }
-        res.status(400).send("Item you are trying to update cannot be found")
+        res.status(401).send("Item you are trying to update cannot be found")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -132,16 +211,18 @@ app.put('/itemListings', (req, res) => {
 })
 
 // Delete item listing
-app.delete('/itemListings', (req, res) => {
+app.delete('/itemListings/:id',passport.authenticate('jwt', {session:false}), (req, res) => {
     try {
         console.log(req.body)
+        var id = req.params.id
         var ItemInfo = req.body
         for (let i = 0; i < postings.length; i++) {
-            if (postings[i].id == ItemInfo.id) {
-                items[i].remove()
-                break
+            if (postings[i].id == id) {
+                postings.splice(i, 1)
+                res.status(200).send()
             }
         }
+        res.status(404).send("Item you are trying to update cannot be found")
     } catch (err) {
         console.log(err)
         res.status(500).send()
@@ -149,7 +230,7 @@ app.delete('/itemListings', (req, res) => {
 })
 
 // Search for items
-app.get('/itemListings/search', (req, res) => {
+app.get('/itemListings/search',passport.authenticate('jwt', {session:false}), (req, res) => {
     try {
         console.log(req.body)
         var itemIsfound = false
@@ -189,7 +270,7 @@ app.get('/itemListings/search', (req, res) => {
             }
         }
         if (itemIsfound) {
-            res.status(200).send(foundList)
+            res.status(200).send({foundList})
         } else {
             res.status(404).send("No items found")
         }
@@ -212,3 +293,6 @@ function authenticateToken(req, res, next) {
         next()
     })
 }
+
+
+
