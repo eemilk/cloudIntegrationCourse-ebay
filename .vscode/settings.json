@@ -3,5 +3,6 @@
         "node_modules{,/**}",
         ".vscode{,/**}"
     ],
-    "appService.deploySubpath": "."
+    "appService.deploySubpath": ".",
+    "appService.defaultWebAppToDeploy": "/subscriptions/816b4816-ee8f-44de-bb4a-1adc0912f0b1/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/ebay-clone"
 }

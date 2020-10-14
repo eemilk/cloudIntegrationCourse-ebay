@@ -79,6 +79,9 @@ var postings = [
 
 
 /* ROUTES */
+app.get('/', (req, res) => {
+    res.sendFile('index.html', { root: __dirname });
+});
 
 // Login passport.authenticate('basic', {session:false}),
 app.get('/login',  (req, res) => {
