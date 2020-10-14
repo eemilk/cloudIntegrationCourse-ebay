@@ -6,7 +6,7 @@ const server = require('../index');
 
 const expect = require('chai').expect;
 const assert = require('chai').assert;
-const apiAddress = 'http://localhost:3000';
+const apiAddress = 'http://localhost:3001';
 
 
 

@@ -1,4 +1,4 @@
-POST http://localhost:3001/users
+POST http://ebayklooni.eastus.cloudapp.azure.com:3001/users
 Content-Type: application/json
 
 {

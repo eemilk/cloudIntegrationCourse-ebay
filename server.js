@@ -13,7 +13,7 @@ const JwtStrategy = require('passport-jwt').Strategy,
       ExtractJwt = require('passport-jwt').ExtractJwt
 const jwtSecretKey = require('./jwt-key.json')
 
-const PORT = 3000
+const PORT = 3001
 
 app.use(bodyParser.json())
 //app.use(bodyParser.urlencoded({ extended: true }))
