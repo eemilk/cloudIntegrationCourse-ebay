@@ -79,8 +79,6 @@ var postings = [
 
 
 /* ROUTES */
-app.get('/', () => {res.send("Hello there")})
-
 
 // Login passport.authenticate('basic', {session:false}),
 app.get('/login',  (req, res) => {
